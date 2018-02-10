@@ -9,6 +9,8 @@ import (
 
 	"sort"
 
+	"math"
+
 	"github.com/bugra/kmeans"
 )
 
@@ -20,6 +22,7 @@ func main() {
 		"example_images/Fotolia_45549559_320_480.jpg",
 		"example_images/giant-panda-shutterstock_86500690.jpg",
 		"example_images/mac_os_x_retina_zebras-wallpaper-1920x1080.jpg",
+		"example_images/windows_xp_bliss-wide.jpg",
 	}
 
 	fmt.Println("<div>")
@@ -50,7 +53,7 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	step := width/1024 + 1
+	step := int(math.Max(float64(width)/1024., 1))
 
 	// load image's pixels into [][]float64
 	colorData := [][]float64{}
@@ -77,8 +80,6 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 		selectedColorsSums[cluster][1] += colorData[idx][1]
 		selectedColorsSums[cluster][2] += colorData[idx][2]
 	}
-
-	//fmt.Println(selectedColorsCount)
 
 	// pack average cluster color to color.Color struct
 	selectedColors := []SortableColor{}
