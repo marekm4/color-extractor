@@ -51,13 +51,13 @@ func printColor(c color.Color) {
 }
 
 func extractColors(image image.Image) []color.Color {
-	var colors []color.Color
-	var sse float64
-	for i := 1; i <= 10; i++ {
-		colors, sse = extractColorsWithCount(image, i)
-		if sse < 10e12 {
+	colors, initialSSE := extractColorsWithCount(image, 1)
+	for i := 2; i <= 10; i++ {
+		tempColors, SSE := extractColorsWithCount(image, i)
+		if SSE < 10 || initialSSE/SSE > 18 {
 			break
 		}
+		colors = tempColors
 	}
 	return colors
 }
@@ -67,7 +67,7 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	step := int(math.Max(float64(width)/320., 1))
+	step := int(math.Max(float64(width)/512., 1))
 
 	// load image's pixels into [][]float64
 	colorData := [][]float64{}
@@ -109,11 +109,13 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		})
 	}
 
-	// sort colors by cluster size
+	// sort colors by cluster size, skip small clusters
 	sort.Sort(sort.Reverse(ByCount(selectedColors)))
 	out := []color.Color{}
 	for _, sc := range selectedColors {
-		out = append(out, sc.Color)
+		if sc.Count/float64(len(colorData)) >= 0.05 {
+			out = append(out, sc.Color)
+		}
 	}
 
 	// calculate SSE
