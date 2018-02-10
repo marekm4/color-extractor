@@ -17,12 +17,12 @@ import (
 func main() {
 	files := []string{
 		"example_images/01540_driftwood_1366x768.jpg",
-		"example_images/04103_misslibertyii_1920x1080.jpg",
-		"example_images/14775211410_42b8d244da_o.jpg",
+		//"example_images/04103_misslibertyii_1920x1080.jpg",
+		//"example_images/14775211410_42b8d244da_o.jpg",
 		"example_images/Fotolia_45549559_320_480.jpg",
 		"example_images/giant-panda-shutterstock_86500690.jpg",
-		"example_images/mac_os_x_retina_zebras-wallpaper-1920x1080.jpg",
-		"example_images/windows_xp_bliss-wide.jpg",
+		//"example_images/mac_os_x_retina_zebras-wallpaper-1920x1080.jpg",
+		//"example_images/windows_xp_bliss-wide.jpg",
 		"example_images/Bez nazwy.jpg",
 		"example_images/british-flag-medium.jpg",
 	}
@@ -50,29 +50,48 @@ func printColor(c color.Color) {
 	fmt.Print("<div style=\"background-color:rgb(", r>>8, ",", g>>8, ",", b>>8, ");display:inline-block;width:40px;height:40px;margin-right:-5px;\"></div>\n")
 }
 
+// https://en.wikipedia.org/wiki/Elbow_method_(clustering)
 func extractColors(image image.Image) []color.Color {
-	colors, initialSSE := extractColorsWithCount(image, 1)
-	for i := 2; i <= 10; i++ {
-		tempColors, SSE := extractColorsWithCount(image, i)
-		if SSE < 10 || initialSSE/SSE > 18 {
-			break
-		}
-		colors = tempColors
+	prevColors, prevSSE := extractColorsWithCount(image, 1)
+
+	// cut off one color images
+	if prevSSE == 0 {
+		return prevColors
 	}
-	return colors
+
+	// calculate first delta
+	colors, SSE := extractColorsWithCount(image, 2)
+	prevDeltaSSE := prevSSE / SSE
+	prevColors = colors
+	prevSSE = SSE
+
+	for i := 3; i <= 10; i++ {
+		colors, SSE = extractColorsWithCount(image, i)
+		deltaSSE := prevSSE / SSE
+		if prevDeltaSSE < deltaSSE {
+			break;
+		}
+		prevColors = colors
+		prevSSE = SSE
+		prevDeltaSSE = deltaSSE
+	}
+
+	return prevColors
 }
 
+// https://en.wikipedia.org/wiki/K-means_clustering
 func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, float64) {
 	width := image.Bounds().Max.X
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	step := int(math.Max(float64(width)/512., 1))
+	stepX := int(math.Max(float64(width)/224., 1))
+	stepY := int(math.Max(float64(height)/224., 1))
 
 	// load image's pixels into [][]float64
 	colorData := [][]float64{}
-	for x := 0; x < width; x += step {
-		for y := 0; y < height; y += step {
+	for x := 0; x < width; x += stepX {
+		for y := 0; y < height; y += stepY {
 			color := image.At(x, y)
 			r, g, b, _ := color.RGBA()
 			colorData = append(colorData, []float64{float64(r >> 8), float64(g >> 8), float64(b >> 8)})
@@ -109,14 +128,8 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		})
 	}
 
-	// sort colors by cluster size, skip small clusters
+	// sort colors by cluster size
 	sort.Sort(sort.Reverse(ByCount(selectedColors)))
-	out := []color.Color{}
-	for _, sc := range selectedColors {
-		if sc.Count/float64(len(colorData)) >= 0.05 {
-			out = append(out, sc.Color)
-		}
-	}
 
 	// calculate SSE
 	SSE := 0.
@@ -128,7 +141,15 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 	}
 	SSE /= float64(len(colorData))
 
-	return out, SSE
+	// cut off very small clusters
+	selectedColorsCutOff := []color.Color{}
+	for _, sc := range selectedColors {
+		if sc.Count/float64(len(colorData)) >= 0.05 {
+			selectedColorsCutOff = append(selectedColorsCutOff, sc.Color)
+		}
+	}
+
+	return selectedColorsCutOff, SSE
 }
 
 type SortableColor struct {
