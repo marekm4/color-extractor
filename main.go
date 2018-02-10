@@ -23,6 +23,8 @@ func main() {
 		"example_images/giant-panda-shutterstock_86500690.jpg",
 		"example_images/mac_os_x_retina_zebras-wallpaper-1920x1080.jpg",
 		"example_images/windows_xp_bliss-wide.jpg",
+		"example_images/Bez nazwy.jpg",
+		"example_images/british-flag-medium.jpg",
 	}
 
 	fmt.Println("<div>")
@@ -31,7 +33,7 @@ func main() {
 		defer imageFile.Close()
 
 		image, _, _ := image.Decode(imageFile)
-		colors := extractColors(image, 5)
+		colors := extractColors(image)
 
 		fmt.Println("<img src=\"" + file + "\" width=\"200\"><br>")
 		for _, c := range colors {
@@ -48,12 +50,24 @@ func printColor(c color.Color) {
 	fmt.Print("<div style=\"background-color:rgb(", r>>8, ",", g>>8, ",", b>>8, ");display:inline-block;width:40px;height:40px;margin-right:-5px;\"></div>\n")
 }
 
-func extractColors(image image.Image, colorsCount int) []color.Color {
+func extractColors(image image.Image) []color.Color {
+	var colors []color.Color
+	var sse float64
+	for i := 1; i <= 10; i++ {
+		colors, sse = extractColorsWithCount(image, i)
+		if sse < 10e12 {
+			break
+		}
+	}
+	return colors
+}
+
+func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, float64) {
 	width := image.Bounds().Max.X
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	step := int(math.Max(float64(width)/1024., 1))
+	step := int(math.Max(float64(width)/320., 1))
 
 	// load image's pixels into [][]float64
 	colorData := [][]float64{}
@@ -102,7 +116,17 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 		out = append(out, sc.Color)
 	}
 
-	return out
+	// calculate SSE
+	SSE := 0.
+	for i, point := range colorData {
+		cluster := clusters[i]
+		centroid := selectedColorsSums[cluster]
+		change, _ := kmeans.SquaredEuclideanDistance(centroid, point)
+		SSE += change
+	}
+	SSE /= float64(len(colorData))
+
+	return out, SSE
 }
 
 type SortableColor struct {
