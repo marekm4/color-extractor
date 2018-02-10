@@ -66,7 +66,7 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 	}
 
 	// calculate clusters
-	clusters, _ := kmeans.Kmeans(colorData, colorsCount, kmeans.EuclideanDistance, 1)
+	clusters, _ := kmeans.Kmeans(colorData, colorsCount, kmeans.EuclideanDistance, 2)
 
 	// calculate average color for each cluster
 	selectedColorsSums := make([][]float64, colorsCount, colorsCount)
