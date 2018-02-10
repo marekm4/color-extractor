@@ -5,29 +5,20 @@ import (
 	"image"
 	"image/color"
 	_ "image/jpeg"
-	"os"
-
-	"sort"
-
 	"math"
+	"os"
+	"path/filepath"
+	"sort"
 
 	"github.com/bugra/kmeans"
 )
 
 func main() {
-	files := []string{
-		"example_images/01540_driftwood_1366x768.jpg",
-		//"example_images/04103_misslibertyii_1920x1080.jpg",
-		//"example_images/14775211410_42b8d244da_o.jpg",
-		"example_images/Fotolia_45549559_320_480.jpg",
-		"example_images/giant-panda-shutterstock_86500690.jpg",
-		//"example_images/mac_os_x_retina_zebras-wallpaper-1920x1080.jpg",
-		//"example_images/windows_xp_bliss-wide.jpg",
-		"example_images/Bez nazwy.jpg",
-		"example_images/british-flag-medium.jpg",
+	files, err := filepath.Glob("example_images/*")
+	if err != nil {
+		panic(err)
 	}
 
-	fmt.Println("<div>")
 	for _, file := range files {
 		imageFile, _ := os.Open(file)
 		defer imageFile.Close()
@@ -42,7 +33,6 @@ func main() {
 		}
 		fmt.Println("<br><br><br>")
 	}
-	fmt.Println("</div>")
 }
 
 func printColor(c color.Color) {
@@ -52,31 +42,21 @@ func printColor(c color.Color) {
 
 // https://en.wikipedia.org/wiki/Elbow_method_(clustering)
 func extractColors(image image.Image) []color.Color {
-	prevColors, prevSSE := extractColorsWithCount(image, 1)
+	colors, initialSSE := extractColorsWithCount(image, 1)
 
-	// cut off one color images
-	if prevSSE == 0 {
-		return prevColors
+	if initialSSE == 0 {
+		return colors
 	}
 
-	// calculate first delta
-	colors, SSE := extractColorsWithCount(image, 2)
-	prevDeltaSSE := prevSSE / SSE
-	prevColors = colors
-	prevSSE = SSE
-
-	for i := 3; i <= 10; i++ {
-		colors, SSE = extractColorsWithCount(image, i)
-		deltaSSE := prevSSE / SSE
-		if prevDeltaSSE < deltaSSE {
-			break;
+	for i := 2; i <= 10; i++ {
+		tempColors, SSE := extractColorsWithCount(image, i)
+		if initialSSE/SSE > 18 {
+			break
 		}
-		prevColors = colors
-		prevSSE = SSE
-		prevDeltaSSE = deltaSSE
+		colors = tempColors
 	}
 
-	return prevColors
+	return colors
 }
 
 // https://en.wikipedia.org/wiki/K-means_clustering
@@ -99,7 +79,7 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 	}
 
 	// calculate clusters
-	clusters, _ := kmeans.Kmeans(colorData, colorsCount, kmeans.EuclideanDistance, 2)
+	clusters, _ := kmeans.Kmeans(colorData, colorsCount, kmeans.EuclideanDistance, 1)
 
 	// calculate average color for each cluster
 	selectedColorsSums := make([][]float64, colorsCount, colorsCount)
@@ -139,7 +119,6 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		change, _ := kmeans.SquaredEuclideanDistance(centroid, point)
 		SSE += change
 	}
-	SSE /= float64(len(colorData))
 
 	// cut off very small clusters
 	selectedColorsCutOff := []color.Color{}
