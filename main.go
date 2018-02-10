@@ -7,6 +7,8 @@ import (
 	_ "image/jpeg"
 	"os"
 
+	"sort"
+
 	"github.com/bugra/kmeans"
 )
 
@@ -48,7 +50,7 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	step := width/256 + 1
+	step := width/1024 + 1
 
 	// load image's pixels into [][]float64
 	colorData := [][]float64{}
@@ -76,16 +78,39 @@ func extractColors(image image.Image, colorsCount int) []color.Color {
 		selectedColorsSums[cluster][2] += colorData[idx][2]
 	}
 
+	//fmt.Println(selectedColorsCount)
+
 	// pack average cluster color to color.Color struct
-	selectedColors := []color.Color{}
+	selectedColors := []SortableColor{}
 	for i := 0; i < colorsCount; i++ {
-		selectedColors = append(selectedColors, color.RGBA{
-			R: uint8(selectedColorsSums[i][0] / float64(selectedColorsCount[i])),
-			G: uint8(selectedColorsSums[i][1] / float64(selectedColorsCount[i])),
-			B: uint8(selectedColorsSums[i][2] / float64(selectedColorsCount[i])),
-			A: 255,
+		selectedColors = append(selectedColors, SortableColor{
+			selectedColorsCount[i],
+			color.RGBA{
+				R: uint8(selectedColorsSums[i][0] / float64(selectedColorsCount[i])),
+				G: uint8(selectedColorsSums[i][1] / float64(selectedColorsCount[i])),
+				B: uint8(selectedColorsSums[i][2] / float64(selectedColorsCount[i])),
+				A: 255,
+			},
 		})
 	}
 
-	return selectedColors
+	// sort colors by cluster size
+	sort.Sort(sort.Reverse(ByCount(selectedColors)))
+	out := []color.Color{}
+	for _, sc := range selectedColors {
+		out = append(out, sc.Color)
+	}
+
+	return out
 }
+
+type SortableColor struct {
+	Count float64
+	Color color.Color
+}
+
+type ByCount []SortableColor
+
+func (c ByCount) Len() int           { return len(c) }
+func (c ByCount) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
+func (c ByCount) Less(i, j int) bool { return c[i].Count < c[j].Count }
