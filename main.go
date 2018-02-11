@@ -104,7 +104,7 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		selectedColorsAverages[i][2] = selectedColorsSums[i][2] / float64(selectedColorsCount[i])
 	}
 
-	// pack average cluster color to color.Color struct
+	// pack average cluster color to SortableColor struct
 	selectedColors := []SortableColor{}
 	for i := 0; i < colorsCount; i++ {
 		selectedColors = append(selectedColors, SortableColor{
@@ -131,13 +131,13 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 	}
 	SSE /= float64(len(colorData))
 
-	// cut off very small clusters
-	selectedColorsCutOff := []color.Color{}
+	// extract color.Color from SortableColor
+	selectedColorsExtracted := []color.Color{}
 	for _, sc := range selectedColors {
-		selectedColorsCutOff = append(selectedColorsCutOff, sc.Color)
+		selectedColorsExtracted = append(selectedColorsExtracted, sc.Color)
 	}
 
-	return selectedColorsCutOff, SSE
+	return selectedColorsExtracted, SSE
 }
 
 type SortableColor struct {
