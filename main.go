@@ -42,18 +42,19 @@ func printColor(c color.Color) {
 
 // https://en.wikipedia.org/wiki/Elbow_method_(clustering)
 func extractColors(image image.Image) []color.Color {
-	colors, initialSSE := extractColorsWithCount(image, 1)
+	colors, prevSSE := extractColorsWithCount(image, 1)
 
-	if initialSSE == 0 {
+	if prevSSE < 1 {
 		return colors
 	}
 
 	for i := 2; i <= 10; i++ {
 		tempColors, SSE := extractColorsWithCount(image, i)
-		if initialSSE/SSE > 18 {
+		if prevSSE-SSE < 150 {
 			break
 		}
 		colors = tempColors
+		prevSSE = SSE
 	}
 
 	return colors
@@ -93,6 +94,15 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		selectedColorsSums[cluster][1] += colorData[idx][1]
 		selectedColorsSums[cluster][2] += colorData[idx][2]
 	}
+	selectedColorsAverages := make([][]float64, colorsCount, colorsCount)
+	for i := range selectedColorsAverages {
+		selectedColorsAverages[i] = make([]float64, 3, 3)
+	}
+	for i := 0; i < colorsCount; i++ {
+		selectedColorsAverages[i][0] = selectedColorsSums[i][0] / float64(selectedColorsCount[i])
+		selectedColorsAverages[i][1] = selectedColorsSums[i][1] / float64(selectedColorsCount[i])
+		selectedColorsAverages[i][2] = selectedColorsSums[i][2] / float64(selectedColorsCount[i])
+	}
 
 	// pack average cluster color to color.Color struct
 	selectedColors := []SortableColor{}
@@ -100,9 +110,9 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 		selectedColors = append(selectedColors, SortableColor{
 			selectedColorsCount[i],
 			color.RGBA{
-				R: uint8(selectedColorsSums[i][0] / float64(selectedColorsCount[i])),
-				G: uint8(selectedColorsSums[i][1] / float64(selectedColorsCount[i])),
-				B: uint8(selectedColorsSums[i][2] / float64(selectedColorsCount[i])),
+				R: uint8(selectedColorsAverages[i][0]),
+				G: uint8(selectedColorsAverages[i][1]),
+				B: uint8(selectedColorsAverages[i][2]),
 				A: 255,
 			},
 		})
@@ -115,17 +125,16 @@ func extractColorsWithCount(image image.Image, colorsCount int) ([]color.Color, 
 	SSE := 0.
 	for i, point := range colorData {
 		cluster := clusters[i]
-		centroid := selectedColorsSums[cluster]
+		centroid := selectedColorsAverages[cluster]
 		change, _ := kmeans.SquaredEuclideanDistance(centroid, point)
 		SSE += change
 	}
+	SSE /= float64(len(colorData))
 
 	// cut off very small clusters
 	selectedColorsCutOff := []color.Color{}
 	for _, sc := range selectedColors {
-		if sc.Count/float64(len(colorData)) >= 0.05 {
-			selectedColorsCutOff = append(selectedColorsCutOff, sc.Color)
-		}
+		selectedColorsCutOff = append(selectedColorsCutOff, sc.Color)
 	}
 
 	return selectedColorsCutOff, SSE
