@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	_ "image/jpeg"
+	_ "image/png"
 	"math"
 	"os"
 	"path/filepath"
@@ -44,7 +45,7 @@ func printColor(c color.Color) {
 func extractColors(image image.Image) []color.Color {
 	for i := 1; true; i++ {
 		colors, SSE := extractColorsWithCount(image, i)
-		if SSE < 2000 || i >= 7 {
+		if SSE < 2000 || i >= 8 {
 			return colors
 		}
 	}
