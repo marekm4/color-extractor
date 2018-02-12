@@ -42,22 +42,14 @@ func printColor(c color.Color) {
 
 // https://en.wikipedia.org/wiki/Elbow_method_(clustering)
 func extractColors(image image.Image) []color.Color {
-	colors, initialSSE := extractColorsWithCount(image, 1)
-
-	if initialSSE == 0 {
-		return colors
-	}
-
-	var SSE float64
-	for i := 2; i <= 5; i++ {
-		colors, SSE = extractColorsWithCount(image, i)
-		if initialSSE/SSE > 10 {
-			break
+	for i := 1; true; i++ {
+		colors, SSE := extractColorsWithCount(image, i)
+		if SSE < 2000 || i >= 7 {
+			return colors
 		}
-
 	}
 
-	return colors
+	return nil
 }
 
 // https://en.wikipedia.org/wiki/K-means_clustering
