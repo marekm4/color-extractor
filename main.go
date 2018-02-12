@@ -202,7 +202,7 @@ func extractColorsHistogram(image image.Image) []color.Color {
 	// extract color.Color from SortableColor, ignore small buckets
 	colors := []color.Color{}
 	for _, avg := range bucketsAverages {
-		if float64(avg.Count)/float64(colorsCount) > 0.0625 {
+		if float64(avg.Count)/float64(colorsCount) > 0.01 {
 			colors = append(colors, avg.Color)
 		}
 	}
