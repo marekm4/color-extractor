@@ -1,48 +1,18 @@
-package main
+package color_extractor
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"math"
-	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/bugra/kmeans"
 )
 
-func main() {
-	files, err := filepath.Glob("example_images/*")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, file := range files {
-		imageFile, _ := os.Open(file)
-		defer imageFile.Close()
-
-		image, _, _ := image.Decode(imageFile)
-		colors := extractColors(image)
-
-		fmt.Println("<img src=\"" + file + "\" width=\"200\"><br>")
-		for _, c := range colors {
-			printColor(c)
-
-		}
-		fmt.Println("<br><br><br>")
-	}
-}
-
-func printColor(c color.Color) {
-	r, g, b, _ := c.RGBA()
-	fmt.Print("<div style=\"background-color:rgb(", r>>8, ",", g>>8, ",", b>>8, ");display:inline-block;width:40px;height:40px;margin-right:-5px;\"></div>\n")
-}
-
 // https://en.wikipedia.org/wiki/Elbow_method_(clustering)
-func extractColors(image image.Image) []color.Color {
+func ExtractColors(image image.Image) []color.Color {
 	for i := 1; true; i++ {
 		colors, SSE := extractColorsWithCount(image, i)
 		if SSE < 2000 || i >= 8 {
