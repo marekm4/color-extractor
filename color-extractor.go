@@ -7,12 +7,12 @@ import (
 	"sort"
 )
 
-type SortableColor struct {
+type sortableColor struct {
 	Count int
 	Color color.Color
 }
 
-type ByCount []SortableColor
+type ByCount []sortableColor
 
 func (c ByCount) Len() int           { return len(c) }
 func (c ByCount) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
@@ -36,7 +36,7 @@ func ExtractColors(image image.Image) []color.Color {
 			i := r >> (8 + 7)
 			j := g >> (8 + 7)
 			k := b >> (8 + 7)
-			if a >> 8 == 255 {
+			if a>>8 == 255 {
 				buckets[i][j][k] = append(buckets[i][j][k], color)
 				colorsCount++
 			}
@@ -44,7 +44,7 @@ func ExtractColors(image image.Image) []color.Color {
 	}
 
 	// calculate bucket's averages
-	var bucketsAverages []SortableColor
+	var bucketsAverages []sortableColor
 	for i := 0; i < 2; i++ {
 		for j := 0; j < 2; j++ {
 			for k := 0; k < 2; k++ {
@@ -58,7 +58,7 @@ func ExtractColors(image image.Image) []color.Color {
 						sums[1] += int(g >> 8)
 						sums[2] += int(b >> 8)
 					}
-					bucketsAverages = append(bucketsAverages, SortableColor{
+					bucketsAverages = append(bucketsAverages, sortableColor{
 						Count: bucketLen,
 						Color: color.RGBA{
 							R: uint8(sums[0] / bucketLen),
@@ -75,7 +75,7 @@ func ExtractColors(image image.Image) []color.Color {
 	// sort colors by cluster size
 	sort.Sort(sort.Reverse(ByCount(bucketsAverages)))
 
-	// extract color.Color from SortableColor, ignore small buckets
+	// extract color.Color from sortableColor, ignore small buckets
 	colors := []color.Color{}
 	for _, avg := range bucketsAverages {
 		if float64(avg.Count)/float64(colorsCount) > 0.01 {
