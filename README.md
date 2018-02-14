@@ -1,15 +1,32 @@
-Simple color extractor written in Go.
+Simple image color extractor written in Go with no external dependencies.
 
 Usage:
 ```go
-import color_extractor "github.com/marekm4/color-extractor"
+package main
 
-...
+import (
+	"fmt"
+	"image"
+	_ "image/jpeg"
+	"os"
 
-imageFile, _ := os.Open(file)
-image, _, _ := image.Decode(imageFile)
-colors := color_extractor.ExtractColors(image)
+	"github.com/marekm4/color-extractor"
+)
+
+func main() {
+	file := "Fotolia_45549559_320_480.jpg"
+	imageFile, _ := os.Open(file)
+	defer imageFile.Close()
+
+	image, _, _ := image.Decode(imageFile)
+	colors := color_extractor.ExtractColors(image)
+
+	fmt.Println(colors)
+}
 ```
 
-Examples:
-![Examples](https://raw.githubusercontent.com/marekm4/color-extractor/master/examples/test.png)
+Example image:
+![Image](https://raw.githubusercontent.com/marekm4/color-extractor/master/example/Fotolia_45549559_320_480.jpg)
+
+Extracted colors:
+![Colors](https://raw.githubusercontent.com/marekm4/color-extractor/master/example/colors.png)
