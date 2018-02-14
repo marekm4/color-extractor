@@ -32,12 +32,14 @@ func ExtractColors(image image.Image) []color.Color {
 	for x := 0; x < width; x += stepX {
 		for y := 0; y < height; y += stepY {
 			color := image.At(x, y)
-			r, g, b, _ := color.RGBA()
+			r, g, b, a := color.RGBA()
 			i := r >> (8 + 7)
 			j := g >> (8 + 7)
 			k := b >> (8 + 7)
-			buckets[i][j][k] = append(buckets[i][j][k], color)
-			colorsCount++
+			if a >> 8 == 255 {
+				buckets[i][j][k] = append(buckets[i][j][k], color)
+				colorsCount++
+			}
 		}
 	}
 
