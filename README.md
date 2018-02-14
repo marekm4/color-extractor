@@ -26,7 +26,9 @@ func main() {
 ```
 
 Example image:
+
 ![Image](https://raw.githubusercontent.com/marekm4/color-extractor/master/example/Fotolia_45549559_320_480.jpg)
 
 Extracted colors:
+
 ![Colors](https://raw.githubusercontent.com/marekm4/color-extractor/master/example/colors.png)
