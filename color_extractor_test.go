@@ -95,31 +95,8 @@ func TestExtractColors(t *testing.T) {
 		}
 
 		extractedColors := ExtractColors(image)
-		if !testColorsEqual(testCase.ExpectedExtractedColors, extractedColors) {
+		if !TestColorsEqual(testCase.ExpectedExtractedColors, extractedColors) {
 			t.Fatalf("TestCase %s: %v expected, got %v", testCase.Name, testCase.ExpectedExtractedColors, extractedColors)
 		}
 	}
-}
-
-func testColorsEqual(a, b []color.Color) bool {
-
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
-		return false
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }
