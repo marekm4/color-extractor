@@ -30,6 +30,13 @@ func ExtractColors(image image.Image) []color.Color {
 	})
 }
 
+type colorSums struct {
+	Red   float64
+	Green float64
+	Blue  float64
+	Count float64
+}
+
 func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	width := image.Bounds().Max.X
 	height := image.Bounds().Max.Y
@@ -39,17 +46,23 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	stepY := int(math.Max(float64(height)/config.DownSizeTo, 1))
 
 	// load image's pixels into buckets
-	var buckets [2][2][2][]color.Color
-	var colorsCount int
+	var buckets [2][2][2]colorSums
+	colorsCount := 0
 	for x := 0; x < width; x += stepX {
 		for y := 0; y < height; y += stepY {
 			color := image.At(x, y)
 			r, g, b, a := color.RGBA()
-			i := r >> (8 + 7)
-			j := g >> (8 + 7)
-			k := b >> (8 + 7)
+			r >>= 8
+			g >>= 8
+			b >>= 8
+			i := r >> 7
+			j := g >> 7
+			k := b >> 7
 			if a>>8 == 255 {
-				buckets[i][j][k] = append(buckets[i][j][k], color)
+				buckets[i][j][k].Red += float64(r)
+				buckets[i][j][k].Green += float64(g)
+				buckets[i][j][k].Blue += float64(b)
+				buckets[i][j][k].Count++
 				colorsCount++
 			}
 		}
@@ -61,21 +74,13 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 		for j := 0; j < 2; j++ {
 			for k := 0; k < 2; k++ {
 				currentBucket := buckets[i][j][k]
-				bucketLen := len(currentBucket)
-				if bucketLen > 0 {
-					var sums [3]int
-					for _, color := range currentBucket {
-						r, g, b, _ := color.RGBA()
-						sums[0] += int(r >> 8)
-						sums[1] += int(g >> 8)
-						sums[2] += int(b >> 8)
-					}
+				if currentBucket.Count > 0 {
 					bucketsAverages = append(bucketsAverages, bucket{
-						Count: bucketLen,
+						Count: int(currentBucket.Count),
 						Color: color.RGBA{
-							R: uint8(sums[0] / bucketLen),
-							G: uint8(sums[1] / bucketLen),
-							B: uint8(sums[2] / bucketLen),
+							R: uint8(currentBucket.Red / currentBucket.Count),
+							G: uint8(currentBucket.Green / currentBucket.Count),
+							B: uint8(currentBucket.Blue / currentBucket.Count),
 							A: 255,
 						},
 					})
