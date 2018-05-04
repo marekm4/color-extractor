@@ -1,21 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"image"
+	"image/color"
 	_ "image/jpeg"
+	"image/png"
+	"io"
 	"os"
 
 	"github.com/marekm4/color-extractor"
 )
 
 func main() {
-	file := "Fotolia_45549559_320_480.jpg"
-	imageFile, _ := os.Open(file)
-	defer imageFile.Close()
+	img, _, _ := image.Decode(os.Stdin)
+	colors := color_extractor.ExtractColors(img)
 
-	image, _, _ := image.Decode(imageFile)
-	colors := color_extractor.ExtractColors(image)
+	createPalette(os.Stdout, colors)
+}
 
-	fmt.Println(colors)
+func createPalette(w io.Writer, colors []color.Color) {
+	box := 40
+	img := image.NewRGBA(image.Rect(0, 0, len(colors)*box, box))
+	for i, color := range colors {
+		for j := 0; j < box; j++ {
+			for k := 0; k < box; k++ {
+				img.Set(i*box+j, k, color)
+			}
+		}
+	}
+	png.Encode(w, img)
 }
