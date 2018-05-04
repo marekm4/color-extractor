@@ -3,6 +3,8 @@ package color_extractor
 import (
 	"image"
 	"image/color"
+	_ "image/jpeg"
+	"os"
 	"testing"
 )
 
@@ -13,66 +15,66 @@ func TestExtractColors(t *testing.T) {
 	transparent := color.RGBA{0, 0, 0, 0}
 
 	testCases := []struct {
-		Name                    string
-		InputColors             []color.Color
-		ExpectedExtractedColors []color.Color
+		Name            string
+		Image           image.Image
+		ExtractedColors []color.Color
 	}{
 		{
-			Name:                    "Empty file",
-			InputColors:             []color.Color{},
-			ExpectedExtractedColors: []color.Color{},
+			Name:            "Empty file",
+			Image:           imageFromColors([]color.Color{}),
+			ExtractedColors: []color.Color{},
 		},
 		{
 			Name: "Single pixel",
-			InputColors: []color.Color{
+			Image: imageFromColors([]color.Color{
 				red,
-			},
-			ExpectedExtractedColors: []color.Color{
+			}),
+			ExtractedColors: []color.Color{
 				red,
 			},
 		},
 		{
 			Name: "One color",
-			InputColors: []color.Color{
+			Image: imageFromColors([]color.Color{
 				white,
 				white,
 				white,
 				white,
-			},
-			ExpectedExtractedColors: []color.Color{
+			}),
+			ExtractedColors: []color.Color{
 				white,
 			},
 		},
 		{
 			Name: "Transparent image",
-			InputColors: []color.Color{
+			Image: imageFromColors([]color.Color{
 				white,
 				white,
 				white,
 				transparent,
-			},
-			ExpectedExtractedColors: []color.Color{
+			}),
+			ExtractedColors: []color.Color{
 				white,
 			},
 		},
 		{
 			Name: "Two colors",
-			InputColors: []color.Color{
+			Image: imageFromColors([]color.Color{
 				red,
 				red,
 				green,
 				green,
 				red,
 				red,
-			},
-			ExpectedExtractedColors: []color.Color{
+			}),
+			ExtractedColors: []color.Color{
 				red,
 				green,
 			},
 		},
 		{
 			Name: "Mixed colors",
-			InputColors: []color.Color{
+			Image: imageFromColors([]color.Color{
 				red,
 				red,
 				color.RGBA{245, 0, 0, 255},
@@ -80,25 +82,46 @@ func TestExtractColors(t *testing.T) {
 				green,
 				green,
 				color.RGBA{0, 240, 0, 255},
-			},
-			ExpectedExtractedColors: []color.Color{
+			}),
+			ExtractedColors: []color.Color{
 				color.RGBA{250, 0, 0, 255},
 				color.RGBA{0, 250, 0, 255},
+			},
+		},
+		{
+			Name:  "File",
+			Image: imageFromFile("example/Fotolia_45549559_320_480.jpg"),
+			ExtractedColors: []color.Color{
+				color.RGBA{231, 230, 227, 255},
+				color.RGBA{57, 58, 10, 255},
+				color.RGBA{204, 51, 24, 255},
+				color.RGBA{190, 177, 55, 255},
+				color.RGBA{104, 152, 11, 255},
 			},
 		},
 	}
 
 	for _, testCase := range testCases {
-		image := image.NewRGBA(image.Rect(0, 0, len(testCase.InputColors), 1))
-		for i, color := range testCase.InputColors {
-			image.Set(i, 0, color)
-		}
-
-		extractedColors := ExtractColors(image)
-		if !testColorsEqual(testCase.ExpectedExtractedColors, extractedColors) {
-			t.Fatalf("TestCase %s: %v expected, got %v", testCase.Name, testCase.ExpectedExtractedColors, extractedColors)
+		extractedColors := ExtractColors(testCase.Image)
+		if !testColorsEqual(testCase.ExtractedColors, extractedColors) {
+			t.Fatalf("TestCase %s: %v expected, got %v", testCase.Name, testCase.ExtractedColors, extractedColors)
 		}
 	}
+}
+
+func imageFromColors(colors []color.Color) image.Image {
+	image := image.NewRGBA(image.Rect(0, 0, len(colors), 1))
+	for i, color := range colors {
+		image.Set(i, 0, color)
+	}
+	return image
+}
+
+func imageFromFile(filename string) image.Image {
+	file, _ := os.Open(filename)
+	defer file.Close()
+	image, _, _ := image.Decode(file)
+	return image
 }
 
 func testColorsEqual(a, b []color.Color) bool {

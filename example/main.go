@@ -12,21 +12,20 @@ import (
 )
 
 func main() {
-	img, _, _ := image.Decode(os.Stdin)
-	colors := color_extractor.ExtractColors(img)
-
+	image, _, _ := image.Decode(os.Stdin)
+	colors := color_extractor.ExtractColors(image)
 	createPalette(os.Stdout, colors)
 }
 
 func createPalette(w io.Writer, colors []color.Color) {
-	box := 40
-	img := image.NewRGBA(image.Rect(0, 0, len(colors)*box, box))
+	squareSize := 40
+	image := image.NewRGBA(image.Rect(0, 0, len(colors)*squareSize, squareSize))
 	for i, color := range colors {
-		for j := 0; j < box; j++ {
-			for k := 0; k < box; k++ {
-				img.Set(i*box+j, k, color)
+		for j := 0; j < squareSize; j++ {
+			for k := 0; k < squareSize; k++ {
+				image.Set(i*squareSize+j, k, color)
 			}
 		}
 	}
-	png.Encode(w, img)
+	png.Encode(w, image)
 }
