@@ -18,13 +18,25 @@ func (c ByCount) Len() int           { return len(c) }
 func (c ByCount) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 func (c ByCount) Less(i, j int) bool { return c[i].Count < c[j].Count }
 
+type Config struct {
+	DownSizeTo  float64
+	SmallBucket float64
+}
+
 func ExtractColors(image image.Image) []color.Color {
+	return ExtractColorsWithConfig(image, Config{
+		DownSizeTo:  224.,
+		SmallBucket: .01,
+	})
+}
+
+func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	width := image.Bounds().Max.X
 	height := image.Bounds().Max.Y
 
 	// calculate downsizing ratio
-	stepX := int(math.Max(float64(width)/224., 1))
-	stepY := int(math.Max(float64(height)/224., 1))
+	stepX := int(math.Max(float64(width)/config.DownSizeTo, 1))
+	stepY := int(math.Max(float64(height)/config.DownSizeTo, 1))
 
 	// load image's pixels into buckets
 	var buckets [2][2][2][]color.Color
@@ -78,7 +90,7 @@ func ExtractColors(image image.Image) []color.Color {
 	// extract color.Color from bucket, ignore small buckets
 	colors := []color.Color{}
 	for _, avg := range bucketsAverages {
-		if float64(avg.Count)/float64(colorsCount) > 0.01 {
+		if float64(avg.Count)/float64(colorsCount) > config.SmallBucket {
 			colors = append(colors, avg.Color)
 		}
 	}
