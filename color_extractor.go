@@ -8,8 +8,10 @@ import (
 )
 
 type bucket struct {
-	Count int
-	Color color.Color
+	Red   float64
+	Green float64
+	Blue  float64
+	Count float64
 }
 
 type ByCount []bucket
@@ -30,13 +32,6 @@ func ExtractColors(image image.Image) []color.Color {
 	})
 }
 
-type colorSums struct {
-	Red   float64
-	Green float64
-	Blue  float64
-	Count float64
-}
-
 func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	width := image.Bounds().Max.X
 	height := image.Bounds().Max.Y
@@ -46,8 +41,8 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	stepY := int(math.Max(float64(height)/config.DownSizeTo, 1))
 
 	// load image's pixels into buckets
-	var buckets [2][2][2]colorSums
-	colorsCount := 0
+	var buckets [2][2][2]bucket
+	totalCount := 0.
 	for x := 0; x < width; x += stepX {
 		for y := 0; y < height; y += stepY {
 			color := image.At(x, y)
@@ -63,7 +58,7 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 				buckets[i][j][k].Green += float64(g)
 				buckets[i][j][k].Blue += float64(b)
 				buckets[i][j][k].Count++
-				colorsCount++
+				totalCount++
 			}
 		}
 	}
@@ -76,27 +71,29 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 				currentBucket := buckets[i][j][k]
 				if currentBucket.Count > 0 {
 					bucketsAverages = append(bucketsAverages, bucket{
-						Count: int(currentBucket.Count),
-						Color: color.RGBA{
-							R: uint8(currentBucket.Red / currentBucket.Count),
-							G: uint8(currentBucket.Green / currentBucket.Count),
-							B: uint8(currentBucket.Blue / currentBucket.Count),
-							A: 255,
-						},
+						Count: currentBucket.Count,
+						Red:   currentBucket.Red / currentBucket.Count,
+						Green: currentBucket.Green / currentBucket.Count,
+						Blue:  currentBucket.Blue / currentBucket.Count,
 					})
 				}
 			}
 		}
 	}
 
-	// sort colors by cluster size
+	// sort buckets by bucket size
 	sort.Sort(sort.Reverse(ByCount(bucketsAverages)))
 
-	// extract color.Color from bucket, ignore small buckets
+	// export color.Color from bucket, ignore small buckets
 	colors := []color.Color{}
 	for _, avg := range bucketsAverages {
-		if float64(avg.Count)/float64(colorsCount) > config.SmallBucket {
-			colors = append(colors, avg.Color)
+		if avg.Count/totalCount > config.SmallBucket {
+			colors = append(colors, color.RGBA{
+				R: uint8(avg.Red),
+				G: uint8(avg.Green),
+				B: uint8(avg.Blue),
+				A: 255,
+			})
 		}
 	}
 
