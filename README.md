@@ -4,7 +4,7 @@ Simple image color extractor written in Go with no external dependencies.
 
 Demo:
 
-https://color-extractor-demo.marekmichalik.pl/
+https://color-extractor-demo.herokuapp.com/
 
 Usage:
 ```go
