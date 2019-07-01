@@ -89,9 +89,9 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	for _, avg := range bucketsAverages {
 		if avg.Count/totalCount > config.SmallBucket {
 			colors = append(colors, color.RGBA{
-				R: uint8(avg.Red),
-				G: uint8(avg.Green),
-				B: uint8(avg.Blue),
+				R: uint8(math.Round(avg.Red)),
+				G: uint8(math.Round(avg.Green)),
+				B: uint8(math.Round(avg.Blue)),
 				A: 255,
 			})
 		}

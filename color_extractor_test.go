@@ -92,11 +92,11 @@ func TestExtractColors(t *testing.T) {
 			Name:  "File",
 			Image: imageFromFile("example/Fotolia_45549559_320_480.jpg"),
 			ExtractedColors: []color.Color{
-				color.RGBA{231, 230, 227, 255},
-				color.RGBA{57, 58, 10, 255},
-				color.RGBA{204, 51, 24, 255},
-				color.RGBA{190, 177, 55, 255},
-				color.RGBA{104, 152, 11, 255},
+				color.RGBA{232, 230, 228, 255},
+				color.RGBA{58, 58, 10, 255},
+				color.RGBA{205, 51, 25, 255},
+				color.RGBA{191, 178, 56, 255},
+				color.RGBA{104, 152, 12, 255},
 			},
 		},
 	}
