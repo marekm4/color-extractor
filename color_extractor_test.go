@@ -15,18 +15,15 @@ func TestExtractColors(t *testing.T) {
 	transparent := color.RGBA{R: 0, G: 0, B: 0, A: 0}
 	semiTransparentRed := color.RGBA{R: 255, G: 0, B: 0, A: 127}
 
-	testCases := []struct {
-		Name            string
+	testCases := map[string]struct {
 		Image           image.Image
 		ExtractedColors []color.Color
 	}{
-		{
-			Name:            "Empty file",
+		"Empty file": {
 			Image:           imageFromColors([]color.Color{}),
 			ExtractedColors: []color.Color{},
 		},
-		{
-			Name: "Single pixel",
+		"Single pixel": {
 			Image: imageFromColors([]color.Color{
 				red,
 			}),
@@ -34,8 +31,7 @@ func TestExtractColors(t *testing.T) {
 				red,
 			},
 		},
-		{
-			Name: "One color",
+		"One color": {
 			Image: imageFromColors([]color.Color{
 				white,
 				white,
@@ -46,8 +42,7 @@ func TestExtractColors(t *testing.T) {
 				white,
 			},
 		},
-		{
-			Name: "Transparent image",
+		"Transparent image": {
 			Image: imageFromColors([]color.Color{
 				white,
 				white,
@@ -58,8 +53,7 @@ func TestExtractColors(t *testing.T) {
 				white,
 			},
 		},
-		{
-			Name: "Semitransparent single pixel",
+		"Semitransparent single pixel": {
 			Image: imageFromColors([]color.Color{
 				semiTransparentRed,
 			}),
@@ -67,8 +61,7 @@ func TestExtractColors(t *testing.T) {
 				red,
 			},
 		},
-		{
-			Name: "Semitransparent image",
+		"Semitransparent image": {
 			Image: imageFromColors([]color.Color{
 				semiTransparentRed,
 				semiTransparentRed,
@@ -79,8 +72,7 @@ func TestExtractColors(t *testing.T) {
 				red,
 			},
 		},
-		{
-			Name: "Semitransparent image, bigger semitransparent region",
+		"Semitransparent image, bigger semitransparent region": {
 			Image: imageFromColors([]color.Color{
 				semiTransparentRed,
 				semiTransparentRed,
@@ -92,8 +84,7 @@ func TestExtractColors(t *testing.T) {
 				green,
 			},
 		},
-		{
-			Name: "Two colors",
+		"Two colors": {
 			Image: imageFromColors([]color.Color{
 				red,
 				red,
@@ -107,8 +98,7 @@ func TestExtractColors(t *testing.T) {
 				green,
 			},
 		},
-		{
-			Name: "Mixed colors",
+		"Mixed colors": {
 			Image: imageFromColors([]color.Color{
 				red,
 				red,
@@ -123,8 +113,7 @@ func TestExtractColors(t *testing.T) {
 				color.RGBA{R: 0, G: 250, B: 0, A: 255},
 			},
 		},
-		{
-			Name:  "File",
+		"File": {
 			Image: imageFromFile("example/Fotolia_45549559_320_480.jpg"),
 			ExtractedColors: []color.Color{
 				color.RGBA{R: 232, G: 230, B: 228, A: 255},
@@ -136,11 +125,13 @@ func TestExtractColors(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		extractedColors := ExtractColors(testCase.Image)
-		if !testColorsEqual(testCase.ExtractedColors, extractedColors) {
-			t.Fatalf("TestCase %s: %v expected, got %v", testCase.Name, testCase.ExtractedColors, extractedColors)
-		}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			extractedColors := ExtractColors(testCase.Image)
+			if !testColorsEqual(testCase.ExtractedColors, extractedColors) {
+				t.Fatalf("%v expected, got %v", testCase.ExtractedColors, extractedColors)
+			}
+		})
 	}
 }
 
