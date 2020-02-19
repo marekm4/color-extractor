@@ -9,23 +9,21 @@ import (
 )
 
 func TestExtractColors(t *testing.T) {
-	white := color.RGBA{225, 255, 255, 255}
-	red := color.RGBA{255, 0, 0, 255}
-	green := color.RGBA{0, 255, 0, 255}
-	transparent := color.RGBA{0, 0, 0, 0}
+	white := color.RGBA{R: 225, G: 255, B: 255, A: 255}
+	red := color.RGBA{R: 255, G: 0, B: 0, A: 255}
+	green := color.RGBA{R: 0, G: 255, B: 0, A: 255}
+	transparent := color.RGBA{R: 0, G: 0, B: 0, A: 0}
+	semiTransparentRed := color.RGBA{R: 255, G: 0, B: 0, A: 127}
 
-	testCases := []struct {
-		Name            string
+	testCases := map[string]struct {
 		Image           image.Image
 		ExtractedColors []color.Color
 	}{
-		{
-			Name:            "Empty file",
+		"Empty file": {
 			Image:           imageFromColors([]color.Color{}),
 			ExtractedColors: []color.Color{},
 		},
-		{
-			Name: "Single pixel",
+		"Single pixel": {
 			Image: imageFromColors([]color.Color{
 				red,
 			}),
@@ -33,8 +31,7 @@ func TestExtractColors(t *testing.T) {
 				red,
 			},
 		},
-		{
-			Name: "One color",
+		"One color": {
 			Image: imageFromColors([]color.Color{
 				white,
 				white,
@@ -45,8 +42,7 @@ func TestExtractColors(t *testing.T) {
 				white,
 			},
 		},
-		{
-			Name: "Transparent image",
+		"Transparent image": {
 			Image: imageFromColors([]color.Color{
 				white,
 				white,
@@ -57,8 +53,38 @@ func TestExtractColors(t *testing.T) {
 				white,
 			},
 		},
-		{
-			Name: "Two colors",
+		"Semitransparent single pixel": {
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+			}),
+			ExtractedColors: []color.Color{
+				red,
+			},
+		},
+		"Semitransparent image": {
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+				semiTransparentRed,
+				green,
+			}),
+			ExtractedColors: []color.Color{
+				green,
+				red,
+			},
+		},
+		"Semitransparent image, bigger semitransparent region": {
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+				semiTransparentRed,
+				semiTransparentRed,
+				green,
+			}),
+			ExtractedColors: []color.Color{
+				red,
+				green,
+			},
+		},
+		"Two colors": {
 			Image: imageFromColors([]color.Color{
 				red,
 				red,
@@ -72,56 +98,64 @@ func TestExtractColors(t *testing.T) {
 				green,
 			},
 		},
-		{
-			Name: "Mixed colors",
+		"Mixed colors": {
 			Image: imageFromColors([]color.Color{
 				red,
 				red,
-				color.RGBA{245, 0, 0, 255},
-				color.RGBA{245, 0, 0, 255},
+				color.RGBA{R: 245, G: 0, B: 0, A: 255},
+				color.RGBA{R: 245, G: 0, B: 0, A: 255},
 				green,
 				green,
-				color.RGBA{0, 240, 0, 255},
+				color.RGBA{R: 0, G: 240, B: 0, A: 255},
 			}),
 			ExtractedColors: []color.Color{
-				color.RGBA{250, 0, 0, 255},
-				color.RGBA{0, 250, 0, 255},
+				color.RGBA{R: 250, G: 0, B: 0, A: 255},
+				color.RGBA{R: 0, G: 250, B: 0, A: 255},
 			},
 		},
-		{
-			Name:  "File",
+		"File": {
 			Image: imageFromFile("example/Fotolia_45549559_320_480.jpg"),
 			ExtractedColors: []color.Color{
-				color.RGBA{232, 230, 228, 255},
-				color.RGBA{58, 58, 10, 255},
-				color.RGBA{205, 51, 25, 255},
-				color.RGBA{191, 178, 56, 255},
-				color.RGBA{104, 152, 12, 255},
+				color.RGBA{R: 232, G: 230, B: 228, A: 255},
+				color.RGBA{R: 58, G: 58, B: 10, A: 255},
+				color.RGBA{R: 205, G: 51, B: 25, A: 255},
+				color.RGBA{R: 191, G: 178, B: 56, A: 255},
+				color.RGBA{R: 104, G: 152, B: 12, A: 255},
 			},
 		},
 	}
 
-	for _, testCase := range testCases {
-		extractedColors := ExtractColors(testCase.Image)
-		if !testColorsEqual(testCase.ExtractedColors, extractedColors) {
-			t.Fatalf("TestCase %s: %v expected, got %v", testCase.Name, testCase.ExtractedColors, extractedColors)
-		}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			extractedColors := ExtractColors(testCase.Image)
+			if !testColorsEqual(testCase.ExtractedColors, extractedColors) {
+				t.Fatalf("%v expected, got %v", testCase.ExtractedColors, extractedColors)
+			}
+		})
 	}
 }
 
 func imageFromColors(colors []color.Color) image.Image {
-	image := image.NewRGBA(image.Rect(0, 0, len(colors), 1))
-	for i, color := range colors {
-		image.Set(i, 0, color)
+	img := image.NewRGBA(image.Rect(0, 0, len(colors), 1))
+	for i, c := range colors {
+		img.Set(i, 0, c)
 	}
-	return image
+	return img
 }
 
 func imageFromFile(filename string) image.Image {
-	file, _ := os.Open(filename)
-	defer file.Close()
-	image, _, _ := image.Decode(file)
-	return image
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	img, _, _ := image.Decode(file)
+	return img
 }
 
 func testColorsEqual(a, b []color.Color) bool {
