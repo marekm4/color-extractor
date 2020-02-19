@@ -13,6 +13,7 @@ func TestExtractColors(t *testing.T) {
 	red := color.RGBA{255, 0, 0, 255}
 	green := color.RGBA{0, 255, 0, 255}
 	transparent := color.RGBA{0, 0, 0, 0}
+	semiTransparentRed := color.RGBA{255, 0, 0, 127}
 
 	testCases := []struct {
 		Name            string
@@ -55,6 +56,40 @@ func TestExtractColors(t *testing.T) {
 			}),
 			ExtractedColors: []color.Color{
 				white,
+			},
+		},
+		{
+			Name: "Semitransparent single pixel",
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+			}),
+			ExtractedColors: []color.Color{
+				red,
+			},
+		},
+		{
+			Name: "Semitransparent image",
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+				semiTransparentRed,
+				green,
+			}),
+			ExtractedColors: []color.Color{
+				green,
+				red,
+			},
+		},
+		{
+			Name: "Semitransparent image, bigger semitransparent region",
+			Image: imageFromColors([]color.Color{
+				semiTransparentRed,
+				semiTransparentRed,
+				semiTransparentRed,
+				green,
+			}),
+			ExtractedColors: []color.Color{
+				red,
+				green,
 			},
 		},
 		{

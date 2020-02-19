@@ -50,15 +50,17 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 			r >>= 8
 			g >>= 8
 			b >>= 8
+			a >>= 8
 			i := r >> 7
 			j := g >> 7
 			k := b >> 7
-			if a>>8 == 255 {
-				buckets[i][j][k].Red += float64(r)
-				buckets[i][j][k].Green += float64(g)
-				buckets[i][j][k].Blue += float64(b)
-				buckets[i][j][k].Count++
-				totalCount++
+			if a > 0 {
+				alphaFactor := float64(a) / 255.
+				buckets[i][j][k].Red += float64(r) * alphaFactor
+				buckets[i][j][k].Green += float64(g) * alphaFactor
+				buckets[i][j][k].Blue += float64(b) * alphaFactor
+				buckets[i][j][k].Count += alphaFactor
+				totalCount += alphaFactor
 			}
 		}
 	}
