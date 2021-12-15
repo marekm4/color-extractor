@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/marekm4/color-extractor.svg?branch=master)](https://travis-ci.org/marekm4/color-extractor)
-
 Simple image color extractor written in Go with no external dependencies.
 
 Demo:
