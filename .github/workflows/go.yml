@@ -50,4 +50,4 @@ jobs:
 #        git diff-index --quiet HEAD || git commit -m "Update coverage" && git push
 
     - name: Update coverage badge
-      if: github.event_name == 'push'
+      uses: ncruces/go-coverage-report@main
