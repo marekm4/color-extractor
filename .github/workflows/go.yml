@@ -24,5 +24,26 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-    - name: Update coverage report
-      uses: ncruces/go-coverage-report@main
+    - name: Checkout wiki
+      uses: actions/checkout@v3
+      with:
+        repository: ${{github.repository}}.wiki
+        path: ./.github/wiki/
+
+    - name: Generate coverage report
+      shell: bash
+      run: |
+        ${{ github.action_path }}/coverage.sh
+        mv ${{ github.action_path }}/coverage.svg ./.github/wiki/
+        mv ${{ github.action_path }}/coverage.html ./.github/wiki/
+        cat ${{ github.action_path }}/coverage.log >> ./.github/wiki/coverage.log
+        sort -u -o ./.github/wiki/coverage.log ./.github/wiki/coverage.log
+
+    - name: Push to wiki
+      shell: bash
+      run: |
+        cd ./.github/wiki/
+        git config --local user.name "GitHub Action"
+        git config --local user.email "action@github.com"
+        git add coverage.svg coverage.log coverage.html
+        git diff-index --quiet HEAD || git commit -m "Update coverage" && git push
