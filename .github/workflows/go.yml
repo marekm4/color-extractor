@@ -41,6 +41,7 @@ jobs:
 
     - name: Push to wiki
       shell: bash
+      if: github.event_name == 'push'
       run: |
         cd ./.github/wiki/
         git config --local user.name "GitHub Action"
