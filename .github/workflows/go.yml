@@ -24,30 +24,6 @@ jobs:
     - name: Test
       run: go test -v ./...
 
-#    - name: Checkout wiki
-#      uses: actions/checkout@v3
-#      with:
-#        repository: ${{github.repository}}.wiki
-#        path: ./.github/wiki/
-#
-#    - name: Generate coverage report
-#      shell: bash
-#      run: |
-#        ./coverage.sh
-#        mv ./coverage.svg ./.github/wiki/
-#        mv ./coverage.html ./.github/wiki/
-#        cat ./coverage.log >> ./.github/wiki/coverage.log
-#        sort -u -o ./.github/wiki/coverage.log ./.github/wiki/coverage.log
-#
-#    - name: Push to wiki
-#      shell: bash
-#      if: github.event_name == 'push'
-#      run: |
-#        cd ./.github/wiki/
-#        git config --local user.name "GitHub Action"
-#        git config --local user.email "action@github.com"
-#        git add coverage.svg coverage.log coverage.html
-#        git diff-index --quiet HEAD || git commit -m "Update coverage" && git push
-
     - name: Update coverage badge
+      if: github.event_name == 'push'
       uses: ncruces/go-coverage-report@main
