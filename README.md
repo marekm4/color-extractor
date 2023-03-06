@@ -1,5 +1,9 @@
 Simple image color extractor written in Go with no external dependencies.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/marekm4/color-extractor.svg)](https://pkg.go.dev/github.com/marekm4/color-extractor)
+[![Go Report Card](https://goreportcard.com/badge/github.com/marekm4/color-extractor)](https://goreportcard.com/report/github.com/marekm4/color-extractor)
+[![Go Coverage](https://github.com/marekm4/color-extractor/wiki/coverage.svg)](https://raw.githack.com/wiki/marekm4/color-extractor/coverage.html)
+
 Demo:
 
 https://color-extractor-demo.marekm4.com/
