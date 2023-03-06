@@ -1,3 +1,3 @@
 module github.com/marekm4/color-extractor
 
-go 1.13
+go 1.20
