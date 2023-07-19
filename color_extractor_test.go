@@ -123,6 +123,13 @@ func TestExtractColors(t *testing.T) {
 				color.RGBA{R: 104, G: 152, B: 12, A: 255},
 			},
 		},
+		"Sub Image": {
+			Image: subImage(imageFromFile("example/Fotolia_45549559_320_480.jpg"), image.Rect(25, 120, 35, 130)),
+			ExtractedColors: []color.Color{
+				color.RGBA{R: 154, G: 1, B: 8, A: 255},
+				color.RGBA{R: 117, G: 2, B: 1, A: 255},
+			},
+		},
 	}
 
 	for name, testCase := range testCases {
@@ -156,6 +163,12 @@ func imageFromFile(filename string) image.Image {
 	}()
 	img, _, _ := image.Decode(file)
 	return img
+}
+
+func subImage(img image.Image, rect image.Rectangle) image.Image {
+	return img.(interface {
+		SubImage(r image.Rectangle) image.Image
+	}).SubImage(rect)
 }
 
 func testColorsEqual(a, b []color.Color) bool {

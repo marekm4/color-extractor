@@ -33,8 +33,8 @@ func ExtractColors(image image.Image) []color.Color {
 }
 
 func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
-	width := image.Bounds().Max.X
-	height := image.Bounds().Max.Y
+	width := image.Bounds().Dx()
+	height := image.Bounds().Dy()
 
 	// calculate downsizing ratio
 	stepX := int(math.Max(float64(width)/config.DownSizeTo, 1))
@@ -43,8 +43,8 @@ func ExtractColorsWithConfig(image image.Image, config Config) []color.Color {
 	// load image's pixels into buckets
 	var buckets [2][2][2]bucket
 	totalCount := 0.
-	for x := 0; x < width; x += stepX {
-		for y := 0; y < height; y += stepY {
+	for x := image.Bounds().Min.X; x < image.Bounds().Max.X; x += stepX {
+		for y := image.Bounds().Min.Y; y < image.Bounds().Max.Y; y += stepY {
 			color := image.At(x, y)
 			r, g, b, a := color.RGBA()
 			r >>= 8
